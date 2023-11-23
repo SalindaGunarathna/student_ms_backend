@@ -5,7 +5,7 @@ const path = process.env.MONGO_URI
 
 const app = require('./app')
 
-mongoose.connect(path,{}).then(result =>{
+mongoose.connect(path,{}).then(result =>{  
     console.log("data base connected ")
 
     app.listen(port, ()=>{

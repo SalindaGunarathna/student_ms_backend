@@ -9,7 +9,7 @@ app.use(fileUpload());
 const Student  = require('./routers/student')
 
 app.use('/api/v1/',Student);
-
+  
 
 app.use('/public/profiles', express.static('public/profiles'))
 
