@@ -3,6 +3,10 @@ const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 require('dotenv').config();
 const Student = require('../model/student');
+const jwt  = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
+
+
 
 
 exports.login = async (req, res, next) => {
@@ -36,27 +40,29 @@ exports.forgotPassword = async (req, res, next) => {
     }
 
     const password  = process.env.PASSWORD
-    const Sendemail = process.env.EMAIL
+    const Sendmail = process.env.EMAIL
     try {
         const student = await Student.findOne({ email: email })
+        var userId = student._id;
         if (!student) {
             throw createHttpError(400, "missing student ")
         }
+
         const token = await student.generateAuthToken()
 
         var transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-              user: Sendemail,
+              user: Sendmail,
               pass: password
             }
           });
           
           var mailOptions = {
-            from: Sendemail,
+            from: Sendmail,
             to: 'salindalakshan99@gmail.com',
             subject: 'Sending Email using Node.js',
-            text: 'That was easy!'
+            text: `http://localhost:3000/ResetPassword/${userId}/${token}`
           };
           
           transporter.sendMail(mailOptions, function(error, info){
@@ -68,7 +74,7 @@ exports.forgotPassword = async (req, res, next) => {
           });
 
 
-        res.send(email)
+        res.send({token, userId})
 
 
     } catch (error) {
@@ -113,5 +119,26 @@ exports.create = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
+};
+
+exports.resetPassword  = async(req, res,next)=> {
+       const {id ,token} = req.params
+       const newPassword = req.body.password
+
+
+       const verify = jwt.verify(token,"mysecret") 
+
+       if(verify) {
+
+        hasspasword = await bcrypt.hash(newPassword, 12)
+      
+        const user = await   Student.findByIdAndUpdate({_id: id},{password: hasspasword})
+
+        console.log(user)
+        res.send("success")
+        
+
+       }
+
 };
 

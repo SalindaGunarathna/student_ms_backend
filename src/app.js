@@ -1,12 +1,15 @@
 require('dotenv').config()
 const express = require('express')
+const cors = require('cors'); 
 const app = express()
-app.use(express.json());   
+app.use(express.json());    
 const createHttpError = require('http-errors')
-const fileUpload = require('express-fileupload');
+const fileUpload = require('express-fileupload'); 
+
 
 app.use(fileUpload());  
-const Student  = require('./routers/student')
+app.use(cors());
+const Student  = require('./routers/student')     
 
 app.use('/api/v1/',Student);
   
@@ -14,7 +17,7 @@ app.use('/api/v1/',Student);
 app.use('/public/profiles', express.static('public/profiles'))
 
 app.use ((err,req,res,next) => {
-   
+     
    
     if (createHttpError.isHttpError(err)) {
         res.status(err.status).send({massage: err.message});

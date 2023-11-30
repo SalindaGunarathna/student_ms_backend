@@ -61,7 +61,7 @@ StudentSchema.pre("save", async function (next) {
   }
   if (!student.tokens || !Array.isArray(student.tokens)) {
     student.tokens = [];
-  }
+  } 
   next();
 })
 
@@ -70,7 +70,7 @@ StudentSchema.statics.findByCredentials = async (email, password) => {
 
   console.log(student)
   console.log(password)
-  console.log(student.password)
+  console.log(student.password)   
 
   if (!student) {
     throw new Error('Unable to login. User not found.');
