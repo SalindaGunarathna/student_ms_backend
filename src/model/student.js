@@ -48,6 +48,7 @@ const StudentSchema = new Schema({
     }
   },
   profile: { type: String },
+  profileID: { type: String },
   tokens: [{
     token: String
   }]
