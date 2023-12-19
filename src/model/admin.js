@@ -5,8 +5,14 @@ const bcrypt = require('bcryptjs')
 const jwt  = require('jsonwebtoken')
 
 
-const StudentSchema = new Schema({
+const AdminSchema = new Schema({
   firstName: {
+    type: String,
+    required: true,
+    default: 'John'
+
+  },
+  lasttName: {
     type: String,
     required: true,
     default: 'John'
@@ -16,6 +22,7 @@ const StudentSchema = new Schema({
     type: String,
     trim: true,
     required: true,
+    unique: false,
     validate: {
       validator: function (value) {
         return validator.isEmail(value);
@@ -55,29 +62,29 @@ const StudentSchema = new Schema({
 });
 
 
-StudentSchema.pre("save", async function (next) {
-  const student = this;
-  if (student.isModified("password")) {
-    student.password = await bcrypt.hash(student.password, 12)
+AdminSchema.pre("save", async function (next) {
+  const admin = this;
+  if (admin.isModified("password")) {
+    admin.password = await bcrypt.hash(admin.password, 12)
   }
-  if (!student.tokens || !Array.isArray(student.tokens)) {
-    student.tokens = [];
+  if (!admin.tokens || !Array.isArray(admin.tokens)) {
+    admin.tokens = [];
   } 
   next();
 })
 
-StudentSchema.statics.findByCredentials = async (email, password) => {
-  const student = await Student.findOne({ email });
+AdminSchema.statics.findByCredentials = async (email, password) => {
+  const admin = await Admin.findOne({ email });
 
-  console.log(student)
+  console.log(admin)
   console.log(password)
-  console.log(student.password)   
+  console.log(admin.password)   
 
-  if (!student) {
+  if (!admin) {
     throw new Error('Unable to login. User not found.');
   }
 
-  const isMatch = await bcrypt.compare(password, student.password)
+  const isMatch = await bcrypt.compare(password, admin.password)
 
   console.log(isMatch)
 
@@ -85,14 +92,14 @@ StudentSchema.statics.findByCredentials = async (email, password) => {
     throw new Error('Unable to login. Incorrect password.');
   }
 
-  return student;
+  return admin;
 };
 
-StudentSchema.methods.generateAuthToken = async function () {
-  const student = this;
-  const token =  jwt.sign({_id : student._id.toString()},"mysecret")
-   student.tokens = student.tokens.concat({token})
-   await student.save()
+AdminSchema.methods.generateAuthToken = async function () {
+  const admin = this;
+  const token =  jwt.sign({_id : admin._id.toString()},"mysecret")
+   admin.tokens = admin.tokens.concat({token})
+   await admin.save()
 
    console.log("admin.tokens")
 
@@ -100,5 +107,5 @@ StudentSchema.methods.generateAuthToken = async function () {
 
 }
 
-const Student = mongoose.model('Student', StudentSchema);
-module.exports = Student;
+const Admin = mongoose.model('Admin', AdminSchema);
+module.exports = Admin;

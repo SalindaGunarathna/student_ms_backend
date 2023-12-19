@@ -2,7 +2,7 @@ const createHttpError = require('http-errors');
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 require('dotenv').config();
-const Student = require('../model/student');
+const Admin = require('../model/admin');
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const path = require('path');
@@ -22,13 +22,13 @@ exports.login = async (req, res, next) => {
             throw createHttpError(400, "missing email or password")
         }
         try {
-            var user = await Student.findByCredentials(req.body.email, req.body.password)
+            var admin = await Admin.findByCredentials(req.body.email, req.body.password)
         } catch (error) {
             throw createHttpError(400, "Admin not found ")
         }
 
-        const token = await user.generateAuthToken()
-        res.send({ user, token })
+        const token = await admin.generateAuthToken()
+        res.send({ admin, token })
 
     } catch (error) {
         next(error)
@@ -47,13 +47,13 @@ exports.forgotPassword = async (req, res, next) => {
     const password = process.env.PASSWORD
     const Sendmail = process.env.EMAIL
     try {
-        const student = await Student.findOne({ email: email })
-        var userId = student._id;
-        if (!student) {
-            throw createHttpError(400, "missing student ")
+        const admin = await Admin.findOne({ email: email })
+        var userId = admin._id;
+        if (!admin) {
+            throw createHttpError(400, "missing admin ")
         }
 
-        const token = await student.generateAuthToken()
+        const token = await admin.generateAuthToken()
 
         var transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -98,7 +98,7 @@ exports.resetPassword = async (req, res, next) => {
 
         hasspasword = await bcrypt.hash(newPassword, 12)
 
-        const user = await Student.findByIdAndUpdate({ _id: id }, { password: hasspasword })
+        const user = await Admin.findByIdAndUpdate({ _id: id }, { password: hasspasword })
 
         console.log(user)
         res.send("success")
@@ -109,7 +109,7 @@ exports.resetPassword = async (req, res, next) => {
 };
 
 
-//Crete new Student  Controller function
+//Crete new Admin  Controller function
 exports.create = async (req, res, next) => {
 
     const CLIENT_ID = process.env.CLIENT_ID
@@ -119,29 +119,35 @@ exports.create = async (req, res, next) => {
     const REFRESH_TOKEN =process.env.REFRESH_TOKEN
 
 
-    const { firstName, email, password } = req.body;
+    const { firstName, email, password } = req.body;  
     try {
         if (!firstName || !email || !password) {
             throw createHttpError(400, "please provide all required information");
         }
-        const { profile } = req.files;
-
+        const { profile } = req.files; 
+        
         // Authenticate google API 
         const oauth2client = new google.auth.OAuth2(
             CLIENT_ID,
             CLIENT_SECRET,
             REDIRECT_URL
         )
+        
         // create temper local storage file path for profile 
         let filepath = __dirname + "../../../public/profile/" + profile.name
+
+
+        console.log(filepath)
         profile.mv(filepath) // save profile local location
 
         if (!profile) {
             throw createHttpError(404, "image not found");
         }
         if (!profile.mimetype.startsWith('image')) {
-            throw createHttpError(400, 'Only images are allowed');
+            throw createHttpError(400, 'Only images are allowed');  
         }
+
+        
         // Authenticate client 
         const drive = google.drive({
             version: 'v3',
@@ -178,10 +184,12 @@ exports.create = async (req, res, next) => {
         } catch (error) {
             next(error)
         }
+
+        
         // set profile Url  path to store in data base 
         const fileUploadPath = result_url.data.webViewLink
-        // create new student
-        const student = new Student({
+        // create new admin
+        const admin = new Admin({
             firstName,
             email,
             password,
@@ -189,6 +197,9 @@ exports.create = async (req, res, next) => {
             profileID: fileID
         });
 
+        const result = await admin.save();
+        res.status(201).send(result);
+         
         // delete tem local profile image 
         fs.unlink(filepath, (err) => {
             if (err) {
@@ -198,8 +209,9 @@ exports.create = async (req, res, next) => {
             }
         });
 
-        const result = await student.save();
-        res.status(201).send(result);
+        
+
+     
     } catch (error) {
         next(error);
     }

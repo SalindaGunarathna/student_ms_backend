@@ -9,9 +9,9 @@ const fileUpload = require('express-fileupload');
 
 app.use(fileUpload());  
 app.use(cors());
-const Student  = require('./routers/student')     
+const Admin  = require('./routers/admin')     
 
-app.use('/api/v1/',Student);
+app.use('/api/v1/',Admin);
   
 
 app.use('/public/profiles', express.static('public/profiles'))
